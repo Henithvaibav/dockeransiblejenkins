@@ -1,15 +1,3 @@
----
-- hosts: docker
-  become: True
-  tasks:
-    - name: Install python pip
-      apt:
-        name: python-pip
-        state: present
-    - name: Install docker-py python module
-      apt:
-        name: docker-py
-        state: present
     - name: Start the container
       docker_container:
         name: webapp
