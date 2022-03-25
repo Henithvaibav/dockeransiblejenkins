@@ -1,0 +1,41 @@
+pipeline{
+    agent any
+    environment {
+       DOCKER_HASH = getVersion()
+     }
+   
+    stages{
+        stage('SCM_Checkout'){
+            steps{
+                git 'git@github.com:Henithvaibav/dockeransiblejenkins.git'
+            }
+        }
+         stage('Maven Build'){
+            steps{
+                sh 'mvn clean package'
+            }
+        }
+        stage('Docker Build Image'){
+            steps{
+                sh "docker image build . -t indrajid/webapp:${DOCKER_HASH}"
+            }
+        }
+        stage('Docker Image Push'){
+            steps{
+                withCredentials([string(credentialsId: 'dockerhub', variable: 'dockerHubPwd')]) {
+                sh "docker login -u indrajid -p ${dockerHubPwd}"
+            }
+                sh "docker image push indrajid/webapp:${DOCKER_HASH}"
+            }
+        }
+        stage('Deploy container'){
+            steps{
+                sh "docker container run -p 8081:8080 indrajid/webapp:${DOCKER_HASH}"
+            }
+        }
+    }
+}
+def getVersion(){
+    def commitHash = sh returnStdout: true, script: 'git rev-parse --short HEAD'
+    return commitHash
+}
